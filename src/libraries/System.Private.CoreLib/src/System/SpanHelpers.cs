@@ -229,12 +229,13 @@ namespace System
 
             nuint i = 0; // byte offset at which we're copying
 
-            if (((nuint)Unsafe.AsPointer(ref b) & 3) != 0)
+            if (!Unsafe.IsOpportunisticallyAligned(ref b, 4))
             {
-                if (((nuint)Unsafe.AsPointer(ref b) & 1) != 0)
+                if (!Unsafe.IsOpportunisticallyAligned(ref b, 2))
                 {
                     b = 0;
                     i += 1;
+                    // Unsafe.AsPointer is safe, since we're only checking alignment < sizeof(void*)
                     if (((nuint)Unsafe.AsPointer(ref b) & 2) != 0)
                         goto IntAligned;
                 }
@@ -252,6 +253,7 @@ namespace System
             // The thing 1, 2, 3, and 4 have in common that the others don't is that if you
             // subtract one from them, their 3rd lsb will not be set. Hence, the below check.
 
+            // Unsafe.AsPointer is safe, since we're only checking alignment < sizeof(void*)
             if ((((nuint)Unsafe.AsPointer(ref b) - 1) & 4) == 0)
             {
                 Unsafe.As<byte, int>(ref Unsafe.AddByteOffset(ref b, i)) = 0;
@@ -335,7 +337,7 @@ namespace System
 
         public static unsafe void ClearWithReferences(ref IntPtr ip, nuint pointerSizeLength)
         {
-            Debug.Assert((int)Unsafe.AsPointer(ref ip) % sizeof(IntPtr) == 0, "Should've been aligned on natural word boundary.");
+            Debug.Assert(Unsafe.IsOpportunisticallyAligned(ref ip, sizeof(IntPtr)), "Should've been aligned on natural word boundary.");
 
             // First write backward 8 natural words at a time.
             // Writing backward allows us to get away with only simple modifications to the

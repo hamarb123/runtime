@@ -2591,10 +2591,11 @@ GenTree* Compiler::impIntrinsic(GenTree*                newobjThis,
             case NI_System_Threading_Interlocked_Exchange:
             case NI_System_Threading_Interlocked_ExchangeAdd:
             case NI_System_Threading_Interlocked_MemoryBarrier:
-            case NI_System_Threading_Interlocked_ReadMemoryBarrier:
 
             case NI_System_Threading_Volatile_Read:
             case NI_System_Threading_Volatile_Write:
+            case NI_System_Threading_Volatile_ReadBarrier:
+            case NI_System_Threading_Volatile_WriteBarrier:
 
                 betterToExpand = true;
                 break;
@@ -3323,7 +3324,8 @@ GenTree* Compiler::impIntrinsic(GenTree*                newobjThis,
 #endif // defined(TARGET_XARCH) || defined(TARGET_ARM64)
 
             case NI_System_Threading_Interlocked_MemoryBarrier:
-            case NI_System_Threading_Interlocked_ReadMemoryBarrier:
+            case NI_System_Threading_Volatile_ReadBarrier:
+            case NI_System_Threading_Volatile_WriteBarrier:
             {
                 assert(sig->numArgs == 0);
 
@@ -3332,9 +3334,13 @@ GenTree* Compiler::impIntrinsic(GenTree*                newobjThis,
 
                 // On XARCH `NI_System_Threading_Interlocked_ReadMemoryBarrier` fences need not be emitted.
                 // However, we still need to capture the effect on reordering.
-                if (ni == NI_System_Threading_Interlocked_ReadMemoryBarrier)
+                if (ni == NI_System_Threading_Volatile_ReadBarrier)
                 {
                     op1->gtFlags |= GTF_MEMORYBARRIER_LOAD;
+                }
+                else if (ni == NI_System_Threading_Volatile_WriteBarrier)
+                {
+                    op1->gtFlags |= GTF_MEMORYBARRIER_STORE;
                 }
 
                 retNode = op1;
@@ -9228,10 +9234,6 @@ NamedIntrinsic Compiler::lookupNamedIntrinsic(CORINFO_METHOD_HANDLE method)
                     {
                         result = NI_System_Threading_Interlocked_MemoryBarrier;
                     }
-                    else if (strcmp(methodName, "ReadMemoryBarrier") == 0)
-                    {
-                        result = NI_System_Threading_Interlocked_ReadMemoryBarrier;
-                    }
                 }
                 else if (strcmp(className, "Thread") == 0)
                 {
@@ -9253,6 +9255,14 @@ NamedIntrinsic Compiler::lookupNamedIntrinsic(CORINFO_METHOD_HANDLE method)
                     else if (strcmp(methodName, "Write") == 0)
                     {
                         result = NI_System_Threading_Volatile_Write;
+                    }
+                    else if (strcmp(methodName, "ReadBarrier") == 0)
+                    {
+                        result = NI_System_Threading_Volatile_ReadBarrier;
+                    }
+                    else if (strcmp(methodName, "WriteBarrier") == 0)
+                    {
+                        result = NI_System_Threading_Volatile_WriteBarrier;
                     }
                 }
             }

@@ -73,6 +73,8 @@ enum NamedIntrinsic : unsigned short
     NI_System_Threading_Thread_get_ManagedThreadId,
     NI_System_Threading_Volatile_Read,
     NI_System_Threading_Volatile_Write,
+    NI_System_Threading_Volatile_ReadBarrier,
+    NI_System_Threading_Volatile_WriteBarrier,
     NI_System_Type_get_IsEnum,
     NI_System_Type_GetEnumUnderlyingType,
     NI_System_Type_get_IsValueType,
@@ -132,7 +134,6 @@ enum NamedIntrinsic : unsigned short
     NI_System_Threading_Interlocked_Exchange,
     NI_System_Threading_Interlocked_ExchangeAdd,
     NI_System_Threading_Interlocked_MemoryBarrier,
-    NI_System_Threading_Interlocked_ReadMemoryBarrier,
 
 #ifdef FEATURE_HW_INTRINSICS
     NI_HW_INTRINSIC_START,
